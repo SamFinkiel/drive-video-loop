@@ -14,7 +14,8 @@ Plays every video in a public Google Drive folder, fullscreen, one after another
 
 - Videos play in filename order, then restart from the first.
 - Double-click toggles browser fullscreen (or press F11).
-- Videos start muted (browser autoplay rules); click "Click for sound" to unmute.
+- The page tries to play with sound. If the browser blocks that, it plays muted until the first click or keypress.
+- For sound with no interaction, run Chrome in kiosk mode: `chrome --kiosk --autoplay-policy=no-user-gesture-required <url>`.
 
 ## Hosting on GitHub Pages
 

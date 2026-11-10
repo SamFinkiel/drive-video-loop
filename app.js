@@ -1,6 +1,5 @@
 const player = document.getElementById("player");
 const message = document.getElementById("message");
-const unmuteBtn = document.getElementById("unmute");
 
 const api = "https://www.googleapis.com/drive/v3/files";
 
@@ -35,7 +34,11 @@ async function start() {
   let index = 0;
   const play = () => {
     player.src = videoUrl(videos[index].id);
-    player.play().catch(() => {});
+    // Try with sound; if the browser blocks it, fall back to muted.
+    player.play().catch(() => {
+      player.muted = true;
+      player.play().catch(() => {});
+    });
   };
 
   // Advance to next video; wrap to the first after the last.
@@ -52,12 +55,10 @@ async function start() {
   message.textContent = "";
   play();
 
-  // Browsers block autoplay with sound, so start muted and offer a toggle.
-  unmuteBtn.hidden = false;
-  unmuteBtn.addEventListener("click", () => {
-    player.muted = false;
-    unmuteBtn.hidden = true;
-  });
+  // If autoplay fell back to muted, the first interaction turns sound on.
+  const unmute = () => { player.muted = false; };
+  document.addEventListener("click", unmute, { once: true });
+  document.addEventListener("keydown", unmute, { once: true });
 
   // Click anywhere for fullscreen.
   document.addEventListener("dblclick", () => {
