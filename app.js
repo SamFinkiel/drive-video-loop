@@ -11,7 +11,11 @@ async function listVideos() {
   return (await res.json()).files;
 }
 
-const videoUrl = (id) => `${api}/${id}?alt=media&key=${CONFIG.API_KEY}`;
+// Two ways to stream a public Drive file; the second is tried if the first fails.
+const sources = [
+  (id) => `${api}/${id}?alt=media&key=${CONFIG.API_KEY}`,
+  (id) => `https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t`,
+];
 
 async function start() {
   if (CONFIG.API_KEY.startsWith("PASTE")) {
@@ -32,8 +36,10 @@ async function start() {
   }
 
   let index = 0;
+  let source = 0;
+  let failures = 0;
   const play = () => {
-    player.src = videoUrl(videos[index].id);
+    player.src = sources[source](videos[index].id);
     // Try with sound; if the browser blocks it, fall back to muted.
     player.play().catch(() => {
       player.muted = true;
@@ -44,12 +50,24 @@ async function start() {
   // Advance to next video; wrap to the first after the last.
   player.addEventListener("ended", () => {
     index = (index + 1) % videos.length;
+    source = 0;
+    failures = 0;
     play();
   });
-  // Skip a broken video instead of stalling.
+  player.addEventListener("playing", () => { message.textContent = ""; failures = 0; });
+  // Try the next source, then skip a broken video instead of stalling.
   player.addEventListener("error", () => {
-    index = (index + 1) % videos.length;
-    setTimeout(play, 1000);
+    const code = player.error ? player.error.code : "?";
+    message.textContent = `Could not load "${videos[index].name}" (media error ${code}). Trying next…`;
+    if (source < sources.length - 1) {
+      source++;
+    } else {
+      source = 0;
+      index = (index + 1) % videos.length;
+      failures++;
+    }
+    // If every video has failed, slow down instead of hammering Google.
+    setTimeout(play, failures >= videos.length ? 15000 : 1000);
   });
 
   message.textContent = "";
