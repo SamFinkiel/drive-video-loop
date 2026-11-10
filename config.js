@@ -3,5 +3,5 @@
 const CONFIG = {
   FOLDER_ID: "1HA34HBwqt7_NP0LLpuHEQgick1KoJtX0",
   // Google Drive API key (public, restrict it to Drive API + your site). See README.
-  API_KEY: "PASTE_YOUR_API_KEY_HERE",
+  API_KEY: "AIzaSyANA7IoGum159ES_dVldJQE2R3eKqMdxOM",
 };
