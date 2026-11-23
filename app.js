@@ -1,5 +1,5 @@
-const player = document.getElementById("player");
-const message = document.getElementById("message");
+const player = document.querySelector('#player')
+const message = document.querySelector('#message')
 
 async function loadList() {
   const res = await fetch("videos.json", { cache: "no-cache" });
@@ -61,3 +61,12 @@ async function start() {
 }
 
 start();
+
+function autoReload(seconds) {
+  setTimeout(() => {
+    window.location.reload();
+  }, seconds * 1000);
+}
+
+// Example: Reload the page every 30 seconds
+autoReload(108);
