@@ -1,5 +1,9 @@
-const player = document.querySelector('#player')
-const message = document.querySelector('#message')
+const player = document.querySelector('#player');
+player.muted = true;
+const message = document.querySelector('#message');
+const fifteenMinMS = 15 * 60 * 1000;
+const time = Date.now();
+const runTime = fifteenMinMS - (time % fifteenMinMS);
 
 async function loadList() {
   const res = await fetch("videos.json", { cache: "no-cache" });
@@ -15,19 +19,23 @@ async function start() {
     message.textContent = err.message;
     return;
   }
-  if (!videos.length) {
+  if (!Array.isArray(videos) || !videos.length) {
     message.textContent = "videos.json is empty.";
     return;
   }
 
   let index = 0;
   let failures = 0;
+
+  player.addEventListener('loadedmetadata', () => {
+    const behind = (Date.now() % fifteenMinMS) / 1000;
+    if (index === 0 && behind < player.duration) player.currentTime = behind;
+  }, { once: true });
+  
   const play = () => {
     player.src = "videos/" + encodeURIComponent(videos[index]);
-    // Try with sound; if the browser blocks it, fall back to muted.
-    player.play().catch(() => {
-      player.muted = true;
-      player.play().catch(() => {});
+    player.play().catch(err => {
+      if (err.name !== "AbortError") message.textContent = "Autoplay was blocked by the browser.";
     });
   };
 
@@ -48,11 +56,6 @@ async function start() {
   message.textContent = "";
   play();
 
-  // If autoplay fell back to muted, the first interaction turns sound on.
-  const unmute = () => { player.muted = false; };
-  document.addEventListener("click", unmute, { once: true });
-  document.addEventListener("keydown", unmute, { once: true });
-
   // Double-click toggles fullscreen.
   document.addEventListener("dblclick", () => {
     if (!document.fullscreenElement) document.documentElement.requestFullscreen();
@@ -62,11 +65,6 @@ async function start() {
 
 start();
 
-function autoReload(seconds) {
-  setTimeout(() => {
-    window.location.reload();
-  }, seconds * 1000);
-}
-
-// Example: Reload the page every 30 seconds
-autoReload(108);
+setTimeout(() => {
+  window.location.reload();
+}, runTime)
